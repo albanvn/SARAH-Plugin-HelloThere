@@ -45,7 +45,7 @@ function myrequest(data, callbackfunc, timeoutfunc, timeout)
                     // request done, disarm trigger
                     arm=0;
                     // then call the native callback function
-                    return callback(err, response, body);
+                    return callbackfunc(err, response, body);
                 });
 }
 
@@ -88,16 +88,25 @@ var exec=function(command, callback, arg1, arg2)
 	return child;
 }
 
-function speakR(tts, cb, SARAH)
+var chooseSentence=function(tts);
 {
     var r="";
-	choices=tts+"";
+	var choices=tts+"";
 	var res = choices.split("|");
 	if (res.length==1)
-	  r=tts;
+        r=tts;
 	else
-	  r=res[Math.floor(Math.random()*res.length)];
-	SARAH.speak(r,cb);
+        r=res[Math.floor(Math.random()*res.length)];
+    return r;
+}
+
+function speakR(tts, cb, SARAH)
+{
+    var r=chooseSentence(tts);
+    if (cb==0 || cb=="")
+        SARAH.speak(r);
+    else
+        SARAH.speak(r,cb);
 }
 
 function getMSecondsFromNow(unit, number)
@@ -533,6 +542,27 @@ var GetSARAHName=function(SARAH)
 	return gs_defaultsarahname;
 }
 
+var existsSync=function(filePath)
+{
+    try
+    {
+        var fs=require('fs');
+        fs.statSync(filePath);
+    }
+    catch(err)
+    {
+        if(err.code == 'ENOENT') 
+            return false;
+    }
+    return true;
+}
+
+var IsWindows=function()
+{
+    if (existsSync(__dirname+"\\basicfunctions.js"))
+        return true;
+    return false;
+}
 
 exports.init=init;
 exports.release=release;
@@ -556,3 +586,6 @@ exports.myrequest=myrequest;
 exports.GetConfig=GetConfig;
 exports.GetSarahVersion=GetSARAHVersion;
 exports.GetSARAHName=GetSARAHName;
+exports.existsSync=existsSync;
+exports.IsWindows=IsWindows;
+exports.chooseSentence=chooseSentence;

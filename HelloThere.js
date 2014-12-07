@@ -74,7 +74,7 @@ exports.standBy = function(motion, data, SARAH)
                 break;
         }
         if (txt!="")
-            SARAH.speak(txt);
+            bf.speakR(txt,0,SARAH);
     }
 }
 
@@ -113,6 +113,6 @@ exports.action = function(data, callback, config, SARAH)
             txt=loc.getLocalString("IDALREADYSEEN");
             break;
     }
-	callback({'tts': txt});
+	callback({'tts': bf.chooseSentence(txt)});
 }
 
