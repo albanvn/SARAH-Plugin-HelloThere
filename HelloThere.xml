@@ -1,0 +1,15 @@
+﻿<grammar version="1.0" xml:lang="fr-FR" mode="voice" root="ruleHelloThere" xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
+  <rule id="ruleHelloThere" scope="public">
+    <example>Sarah bonjour</example>
+    <tag>out.action=new Object();</tag>
+    <item>Sarah</item>
+    <one-of>
+      <item>bonjour<tag>out.action.say="bonjour";</tag></item>
+      <item>bonsoir<tag>out.action.say="bonsoir";</tag></item>
+      <item>salut<tag>out.action.say="salut";</tag></item>
+    </one-of>
+    <tag>out.action._attributes.uri="http://127.0.0.1:8080/sarah/HelloThere";</tag>
+  </rule>
+<!-- Automatic Generation § -->
+<!-- § Automatic Generation -->
+</grammar>

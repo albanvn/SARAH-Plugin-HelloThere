@@ -1,0 +1,8 @@
+{
+  "modules" : { 
+    "HelloThere"  : {
+      "description": "Permet de dire bonjour une fois par jour le matin et bonsoir à la personne le soir",
+      "version": "1.0"
+    }
+  }
+}
