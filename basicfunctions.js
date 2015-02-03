@@ -9,6 +9,7 @@
 /////////////////////////////////////////////
 const gs_sep="§";
 const gs_defaultsarahname="SARAH";
+const gs_SPEAKPAUSE=2;
 
 function init(func)
 {
@@ -22,58 +23,81 @@ function release()
 {
 }
 
+function manageTimeoutFunc(info)
+{
+    // if trigger setted then call timeoutfunc
+    if (info.state==1)
+        return info.timeoutfunc();
+}
+
+function manageRequestFunc(err, response, body, info)
+{
+    // request done, disarm trigger
+    info.state=0;
+    // then call the native callback function
+    return info.callbackfunc(err, response, body);
+}
+
 function myrequest(data, callbackfunc, timeoutfunc, timeout)
 {
   var request=require("request");
   // default timeout is 60 seconds
   var to=60;
   // arm the trigger
-  var arm=1;
+  var info={'state': 1, 'timeoutfunc': timeoutfunc, 'callbackfunc': callbackfunc};
   // new timeout ?
   if (typeof(timeout)!="undefined")
     to=timeout;
   setTimeout(function()
              {
-                // if trigger setted then call timeoutfunc
-                if (arm==1)
-                    return timeoutfunc();
+                manageTimeoutFunc(info);
              }, 
              to*1000);
   // do the request
   request(data, function(err, response, body)
                 {
-                    // request done, disarm trigger
-                    arm=0;
-                    // then call the native callback function
-                    return callbackfunc(err, response, body);
+                    manageRequestFunc(err, response, body, info);
                 });
 }
 
-// Function speak needed with SARAH v3.X because SARAH.speak function doesn't support concomitant call
+
+// Function speak needed with SARAH >v3.X because SARAH.speak function doesn't support concomitant call
 function speak(content, SARAH)
 {
     if (typeof SARAH.context.isspeaking==="undefined")
 	{
+        // Initialize structure
 		SARAH.context.isspeaking=false;
 		SARAH.context.tospeak=new Array();
 	}
 	if (SARAH.context.isspeaking==true || SARAH.context.tospeak.length>0)
-		SARAH.context.tospeak.push(content);
+    {
+        var speak_arr=content.split("<P>");
+        for (var i=1; i<speak_arr.length;i++)
+            SARAH.context.tospeak.push(speak_arr[i]);
+    }
 	else
 	{
 		SARAH.context.isspeaking=true;
-		SARAH.speak(content,
-					function checkSpeak()
-					{
-						SARAH.context.isspeaking=false;
-						if (SARAH.context.tospeak.length>=1)
-						{
-							SARAH.context.isspeaking=true;
-							var txt=SARAH.context.tospeak[0];
-							SARAH.context.tospeak.shift();
-							SARAH.speak(txt, checkSpeak);
-						}
-					});
+        var speak_arr=content.split("<P>");
+        for (var i=1; i<speak_arr.length;i++)
+            SARAH.context.tospeak.push(speak_arr[i]);
+        if (speak_arr.length>1)
+            content=speak_arr[0];
+		SARAH.speak(content,function()
+                        {
+                            setTimeout(function checkSpeak()
+                                        {
+                                            SARAH.context.isspeaking=false;
+                                            if (SARAH.context.tospeak.length>=1)
+                                            {
+                                                SARAH.context.isspeaking=true;
+                                                var txt=SARAH.context.tospeak[0];
+                                                SARAH.context.tospeak.shift();
+                                                SARAH.speak(txt, checkSpeak);
+                                            }
+                                        }, gs_SPEAKPAUSE*1000);
+                        });
 	}
 }
 
@@ -88,7 +112,7 @@ var exec=function(command, callback, arg1, arg2)
 	return child;
 }
 
-var chooseSentence=function(tts);
+var chooseSentence=function(tts)
 {
     var r="";
 	var choices=tts+"";
@@ -98,6 +122,16 @@ var chooseSentence=function(tts);
 	else
         r=res[Math.floor(Math.random()*res.length)];
     return r;
+}
+
+var ReplaceList=function(original, list)
+{
+    var str=original;
+    for (var k in list)
+    {
+        str=str.replace(k, list[k]);
+    }
+    return str;
 }
 
 function speakR(tts, cb, SARAH)
@@ -589,3 +623,4 @@ exports.GetSARAHName=GetSARAHName;
 exports.existsSync=existsSync;
 exports.IsWindows=IsWindows;
 exports.chooseSentence=chooseSentence;
+exports.ReplaceList=ReplaceList;

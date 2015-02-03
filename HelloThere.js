@@ -17,6 +17,8 @@ var loc=0;
 var bf=0;
 
 const gs_midday=16;
+const gs_minhour=7;
+const gs_maxhour=23;
 const gs_resethello=4;
 
 var g_peopleSeen=new Array();
@@ -33,6 +35,7 @@ exports.init = function(SARAH)
 
 function resetPeople()
 {
+    console.log("HelloThere: resetPeople");
     g_peopleSeen=new Array();
 }
 
@@ -47,6 +50,8 @@ var checkPeople=function(name)
         return -1;
     if (dt.getHours()>gs_midday)
         value=2;
+    if (dt.getHours()<=gs_minhour || dt.getHours()>=gs_maxhour)
+        value=0;
     if (name in g_peopleSeen)
         if ((g_peopleSeen[name]&value)!=0)
             value=0;
@@ -73,6 +78,8 @@ exports.standBy = function(motion, data, SARAH)
             default:
                 break;
         }
+        console.log("HelloThere: "+motion);
+        console.log(data);
         if (txt!="")
             bf.speakR(txt,0,SARAH);
     }
@@ -113,6 +120,9 @@ exports.action = function(data, callback, config, SARAH)
             txt=loc.getLocalString("IDALREADYSEEN");
             break;
     }
-	callback({'tts': bf.chooseSentence(txt)});
+    if (txt!="")
+        callback({'tts': bf.chooseSentence(txt)});
+    else
+        callback({});
 }
 
